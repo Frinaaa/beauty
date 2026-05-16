@@ -4,7 +4,7 @@ import { useState, useEffect, Suspense } from "react";
 import { useForm } from "react-hook-form";
 import { useSearchParams, useRouter } from "next/navigation";
 import { supabase } from "@/src/lib/supabase";
-import { Upload, Tag, DollarSign, Layers, Image as ImageIcon, Box, Percent, Droplets, Sparkles, Info, X } from "lucide-react";
+import { Upload, Tag, DollarSign, Layers, Image as ImageIcon, Box, Percent, Droplets, Sparkles, Info, X, Plus, Feather, ListChecks } from "lucide-react";
 
 type FormValues = {
   name: string;
@@ -18,15 +18,19 @@ type FormValues = {
   key_ingredients: string;
   skin_type: string;
   skin_concern: string;
+  benefits: string;
+  texture_feel: string;
 };
+
+type KeyIngredient = { name: string; description: string };
 
 function ProductForm() {
   const router = useRouter();
   const { register, handleSubmit, watch, reset, formState: { errors } } = useForm<FormValues>({
     defaultValues: { 
-      name: "", brand_name: "", category: "Cleanser", price: "", discount: "", 
+      name: "", brand_name: "", category: "CLEANSING", price: "", discount: "", 
       stock: "", description: "", full_ingredients: "", key_ingredients: "", 
-      skin_type: "All", skin_concern: "" 
+      skin_type: "All", skin_concern: "", benefits: "", texture_feel: ""
     }
   });
   
@@ -34,6 +38,7 @@ function ProductForm() {
   const [previewUrls, setPreviewUrls] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [keyIngredients, setKeyIngredients] = useState<KeyIngredient[]>([{ name: "", description: "" }]);
   const searchParams = useSearchParams();
   const productId = searchParams?.get("id");
 
@@ -54,7 +59,12 @@ function ProductForm() {
             key_ingredients: data.key_ingredients || "",
             skin_type: data.skin_type || "All",
             skin_concern: data.skin_concern || "",
+            benefits: data.benefits || "",
+            texture_feel: data.texture_feel || "",
           });
+          if (data.key_ingredients_detail) {
+            setKeyIngredients(data.key_ingredients_detail);
+          }
           if (data.image_url) {
             setPreviewUrls(data.image_url.split(','));
           }
@@ -134,6 +144,9 @@ function ProductForm() {
         key_ingredients: data.key_ingredients,
         skin_type: data.skin_type,
         skin_concern: data.skin_concern,
+        benefits: data.benefits,
+        key_ingredients_detail: keyIngredients.filter(k => k.name.trim()),
+        texture_feel: data.texture_feel,
         image_url: finalUrls.join(','),
         is_active: true,
       };
@@ -194,13 +207,9 @@ function ProductForm() {
               {...register("category", { required: true })}
               className="w-full px-4 py-3 bg-white/80 border border-[#4A1523]/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#E9967A]/50 text-[#4A1523]"
             >
-              <option value="Cleanser">Cleanser</option>
-              <option value="Toner">Toner</option>
-              <option value="Serum">Serum</option>
-              <option value="Moisturizer">Moisturizer</option>
-              <option value="Sunscreen">Sunscreen</option>
-              <option value="Mask">Mask</option>
-              <option value="Makeup">Makeup</option>
+              <option value="CLEANSING">CLEANSING</option>
+              <option value="REGENERATION">REGENERATION</option>
+              <option value="HYDRATION">HYDRATION</option>
             </select>
           </div>
 
@@ -317,8 +326,82 @@ function ProductForm() {
           </div>
         </div>
 
+        {/* 5. Benefits */}
         <div className="space-y-6">
-          <h3 className="text-lg font-semibold text-[#4A1523] border-b border-[#4A1523]/10 pb-2">5. Media</h3>
+          <h3 className="text-lg font-semibold text-[#4A1523] border-b border-[#4A1523]/10 pb-2">5. Benefits</h3>
+          <div>
+            <label className="flex items-center text-sm font-medium text-[#4A1523] mb-2">
+              <ListChecks className="w-4 h-4 mr-2 text-[#E9967A]" /> Product Benefits
+            </label>
+            <textarea
+              {...register("benefits")}
+              rows={4}
+              className="w-full px-4 py-3 bg-white/80 border border-[#4A1523]/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#E9967A]/50 text-[#4A1523]"
+              placeholder={"Deeply hydrates the dermal layers\nVisible reduction in fine lines within 14 days\nOrganic botanical extracts for sensitive skin"}
+            />
+            <p className="text-xs text-[#4A1523]/40 mt-1 ml-1">One benefit per line</p>
+          </div>
+        </div>
+
+        {/* 6. Key Ingredients (Structured) */}
+        <div className="space-y-6">
+          <h3 className="text-lg font-semibold text-[#4A1523] border-b border-[#4A1523]/10 pb-2">6. Key Ingredients Detail</h3>
+          {keyIngredients.map((ing, idx) => (
+            <div key={idx} className="grid grid-cols-[1fr_2fr_auto] gap-3 items-start">
+              <input
+                value={ing.name}
+                onChange={(e) => {
+                  const updated = [...keyIngredients];
+                  updated[idx].name = e.target.value;
+                  setKeyIngredients(updated);
+                }}
+                className="px-4 py-3 bg-white/80 border border-[#4A1523]/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#E9967A]/50 text-[#4A1523] text-sm"
+                placeholder="e.g. Hyaluronic Acid"
+              />
+              <input
+                value={ing.description}
+                onChange={(e) => {
+                  const updated = [...keyIngredients];
+                  updated[idx].description = e.target.value;
+                  setKeyIngredients(updated);
+                }}
+                className="px-4 py-3 bg-white/80 border border-[#4A1523]/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#E9967A]/50 text-[#4A1523] text-sm"
+                placeholder="Short description..."
+              />
+              {keyIngredients.length > 1 && (
+                <button type="button" onClick={() => setKeyIngredients(prev => prev.filter((_, i) => i !== idx))} className="p-3 text-red-400 hover:text-red-600 transition-colors">
+                  <X className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+          ))}
+          <button
+            type="button"
+            onClick={() => setKeyIngredients(prev => [...prev, { name: "", description: "" }])}
+            className="flex items-center gap-2 text-sm text-[#E9967A] hover:text-[#4A1523] transition-colors font-medium"
+          >
+            <Plus className="w-4 h-4" /> Add Ingredient
+          </button>
+        </div>
+
+        {/* 7. Texture & Feel */}
+        <div className="space-y-6">
+          <h3 className="text-lg font-semibold text-[#4A1523] border-b border-[#4A1523]/10 pb-2">7. Texture & Feel</h3>
+          <div>
+            <label className="flex items-center text-sm font-medium text-[#4A1523] mb-2">
+              <Feather className="w-4 h-4 mr-2 text-[#E9967A]" /> Texture Description
+            </label>
+            <textarea
+              {...register("texture_feel")}
+              rows={3}
+              className="w-full px-4 py-3 bg-white/80 border border-[#4A1523]/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#E9967A]/50 text-[#4A1523]"
+              placeholder="A lightweight, silky liquid that glides onto the skin..."
+            />
+          </div>
+        </div>
+
+        <div className="space-y-6">
+          <h3 className="text-lg font-semibold text-[#4A1523] border-b border-[#4A1523]/10 pb-2">8. Media</h3>
           
           <div>
             <label className="flex items-center text-sm font-medium text-[#4A1523] mb-2">

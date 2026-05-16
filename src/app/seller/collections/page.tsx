@@ -13,6 +13,8 @@ type Product = {
   price: number;
   stock: number;
   image_url: string;
+  image: string;
+  status: string;
 };
 
 export default function CollectionsPage() {
@@ -110,7 +112,7 @@ export default function CollectionsPage() {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
           {filteredProducts.map((product) => {
-            const urls = product.image_url ? product.image_url.split(',') : [];
+            const urls = product.image ? [product.image] : (product.image_url ? product.image_url.split(',') : []);
             const displayUrl = urls.length > 0 ? urls[0] : null;
             const hasMultipleImages = urls.length > 1;
 

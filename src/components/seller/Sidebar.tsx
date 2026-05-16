@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { LayoutDashboard, PlusSquare, Package, Settings, LogOut } from "lucide-react";
+import { LayoutDashboard, PlusSquare, Package, Settings, LogOut, Send, ShoppingBag } from "lucide-react";
 import { signOutAction } from "@/src/app/actions/auth";
 
 export default function Sidebar() {
@@ -27,6 +27,14 @@ export default function Sidebar() {
         <Link href="/seller/add-product" className="flex items-center px-4 py-3 text-white/80 hover:text-white hover:bg-white/10 rounded-xl transition-all group">
           <PlusSquare className="w-5 h-5 mr-3 group-hover:text-[#E9967A] transition-colors" />
           <span className="font-medium tracking-wide">Add Product</span>
+        </Link>
+        <Link href="/seller/post" className="flex items-center px-4 py-3 text-white/80 hover:text-white hover:bg-white/10 rounded-xl transition-all group">
+          <Send className="w-5 h-5 mr-3 group-hover:text-[#E9967A] transition-colors" />
+          <span className="font-medium tracking-wide">Post</span>
+        </Link>
+        <Link href="/seller/orders" className="flex items-center px-4 py-3 text-white/80 hover:text-white hover:bg-white/10 rounded-xl transition-all group">
+          <ShoppingBag className="w-5 h-5 mr-3 group-hover:text-[#E9967A] transition-colors" />
+          <span className="font-medium tracking-wide">Orders</span>
         </Link>
         <Link href="/seller/collections" className="flex items-center px-4 py-3 text-white/80 hover:text-white hover:bg-white/10 rounded-xl transition-all group">
           <Package className="w-5 h-5 mr-3 group-hover:text-[#E9967A] transition-colors" />
