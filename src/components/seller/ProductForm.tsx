@@ -41,6 +41,7 @@ function ProductForm() {
   const [keyIngredients, setKeyIngredients] = useState<KeyIngredient[]>([{ name: "", description: "" }]);
   const searchParams = useSearchParams();
   const productId = searchParams?.get("id");
+  const isEditing = Boolean(productId);
 
   useEffect(() => {
     if (productId) {
@@ -440,7 +441,7 @@ function ProductForm() {
           disabled={loading}
           className="w-full mt-8 flex items-center justify-center py-4 bg-[#4A1523] hover:bg-[#3A101C] text-white rounded-xl transition-all duration-300 shadow-lg shadow-[#4A1523]/20 font-medium tracking-wide disabled:opacity-70"
         >
-          {loading ? "Saving..." : <><Upload className="w-5 h-5 mr-2" /> Publish Product</>}
+          {loading ? "Saving..." : <><Upload className="w-5 h-5 mr-2" /> {isEditing ? "Update Product" : "Publish Product"}</>}
         </button>
       </form>
 

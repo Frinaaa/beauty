@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "@/src/lib/supabase";
-import { Send, Image as ImageIcon, X, Loader2, Trash2 } from "lucide-react";
+import { Send, Image as ImageIcon, X, Loader2, Trash2, Edit } from "lucide-react";
 
 export default function PostPage() {
   const [caption, setCaption] = useState("");
@@ -11,6 +11,8 @@ export default function PostPage() {
   const [loading, setLoading] = useState(false);
   const [posts, setPosts] = useState<any[]>([]);
   const [fetching, setFetching] = useState(true);
+  const [editingPost, setEditingPost] = useState<any | null>(null);
+  const isEditing = Boolean(editingPost);
 
   const fetchPosts = async () => {
     setFetching(true);
@@ -44,6 +46,20 @@ export default function PostPage() {
     setPreviewUrl("");
   };
 
+  const resetForm = () => {
+    setCaption("");
+    setFile(null);
+    setPreviewUrl("");
+    setEditingPost(null);
+  };
+
+  const openEdit = (post: any) => {
+    setEditingPost(post);
+    setCaption(post.caption || "");
+    setPreviewUrl(post.image_url || "");
+    setFile(null);
+  };
+
   const handleDelete = async (id: number) => {
     if (!confirm("Are you sure you want to delete this post?")) return;
     
@@ -60,11 +76,11 @@ export default function PostPage() {
   };
 
   const handlePost = async () => {
-    if (!caption && !file) return alert("Please add a caption or image.");
+    if (!caption && !file && !previewUrl) return alert("Please add a caption or image.");
     setLoading(true);
 
     try {
-      let imageUrl = "";
+      let imageUrl = previewUrl;
 
       if (file) {
         const fileExt = file.name.split('.').pop();
@@ -80,21 +96,33 @@ export default function PostPage() {
         imageUrl = data.publicUrl;
       }
 
+      if (isEditing && !imageUrl) {
+        imageUrl = "";
+      }
+
       const payload = {
-        id: Date.now(),
         caption,
         image_url: imageUrl || null,
-        created_at: new Date().toISOString(),
       };
 
-      const { error } = await supabase.from("posts").insert([payload]);
-      if (error) throw error;
+      if (editingPost) {
+        const { error } = await supabase.from("posts").update(payload).eq("id", editingPost.id);
+        if (error) throw error;
+        alert("Post updated successfully!");
+      } else {
+        const newPost = {
+          id: Date.now(),
+          caption,
+          image_url: imageUrl || null,
+          created_at: new Date().toISOString(),
+        };
+        const { error } = await supabase.from("posts").insert([newPost]);
+        if (error) throw error;
+        alert("Post published successfully!");
+      }
 
-      alert("Post published successfully!");
-      setCaption("");
-      setFile(null);
-      setPreviewUrl("");
-      fetchPosts(); // Refresh list
+      resetForm();
+      fetchPosts();
     } catch (error: any) {
       alert("Error publishing post: " + error.message);
     } finally {
@@ -107,11 +135,19 @@ export default function PostPage() {
       {/* Left Column: Create Form */}
       <div>
         <header className="mb-10">
-          <h1 className="text-4xl font-semibold tracking-tight text-[#4A1523] mb-2">Create Post</h1>
+          <h1 className="text-4xl font-semibold tracking-tight text-[#4A1523] mb-2">{isEditing ? "Edit Post" : "Create Post"}</h1>
           <p className="text-[#4A1523]/60 font-light">Share updates, announcements, or behind-the-scenes content.</p>
         </header>
 
         <div className="bg-white/60 backdrop-blur-md rounded-2xl p-8 border border-white/50 shadow-[0_8px_30px_rgb(0,0,0,0.04)] space-y-6">
+          {editingPost && (
+            <div className="rounded-2xl bg-[#FFF6EB] border border-[#E9967A]/20 p-4 text-[#4A1523] flex items-center justify-between gap-3">
+              <span className="text-sm font-semibold">Editing post</span>
+              <button type="button" onClick={resetForm} className="text-xs uppercase tracking-widest text-[#E9967A] hover:text-[#4A1523] transition-colors">
+                Cancel edit
+              </button>
+            </div>
+          )}
           {/* Caption */}
           <div>
             <label className="block text-xs font-bold uppercase tracking-widest text-[#4A1523]/50 mb-2 ml-1">Caption</label>
@@ -149,14 +185,14 @@ export default function PostPage() {
           {/* Submit */}
           <button
             onClick={handlePost}
-            disabled={loading || (!caption && !file)}
+            disabled={loading || (!caption && !file && !previewUrl)}
             className="w-full flex items-center justify-center py-4 bg-[#4A1523] hover:bg-[#3A101C] text-white rounded-xl transition-all duration-300 shadow-lg shadow-[#4A1523]/20 font-medium tracking-wide disabled:opacity-50"
           >
             {loading ? (
               <Loader2 className="w-5 h-5 animate-spin" />
             ) : (
               <>
-                <Send className="w-5 h-5 mr-2" /> Publish Post
+                <Send className="w-5 h-5 mr-2" /> {isEditing ? "Update Post" : "Publish Post"}
               </>
             )}
           </button>
@@ -189,13 +225,22 @@ export default function PostPage() {
                       {new Date(post.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                     </p>
                     <p className="text-sm text-[#4A1523] line-clamp-3 leading-relaxed mb-4">{post.caption}</p>
-                    <button 
-                      onClick={() => handleDelete(post.id)}
-                      className="text-[10px] uppercase tracking-widest font-bold text-red-400 hover:text-red-600 transition-colors flex items-center gap-1.5"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                      Delete Post
-                    </button>
+                    <div className="flex items-center gap-3">
+                      <button
+                        onClick={() => openEdit(post)}
+                        className="text-[10px] uppercase tracking-widest font-bold text-[#4A1523] hover:text-[#E9967A] transition-colors flex items-center gap-1.5"
+                      >
+                        <Edit className="w-3.5 h-3.5" />
+                        Edit
+                      </button>
+                      <button 
+                        onClick={() => handleDelete(post.id)}
+                        className="text-[10px] uppercase tracking-widest font-bold text-red-400 hover:text-red-600 transition-colors flex items-center gap-1.5"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                        Delete Post
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
