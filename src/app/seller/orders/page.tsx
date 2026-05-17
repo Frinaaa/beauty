@@ -2,11 +2,10 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "@/src/lib/supabase";
-import { 
-  ShoppingBag, 
-  Search, 
-  Filter, 
-  MoreVertical, 
+import {
+  ShoppingBag,
+  Search,
+  Filter,
   ExternalLink,
   Clock,
   CheckCircle2,
@@ -19,7 +18,8 @@ type Order = {
   id: string;
   created_at: string;
   user_id: string;
-  total_amount: number;
+  total_amount?: number;
+  total_price?: number;
   status: 'Pending' | 'Processing' | 'Shipped' | 'Delivered' | 'Cancelled';
   customer_email?: string;
   items?: any[];
@@ -30,6 +30,7 @@ export default function OrdersPage() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
+  const [filterOpen, setFilterOpen] = useState(false);
 
   const fetchOrders = async () => {
     setLoading(true);
@@ -72,8 +73,8 @@ export default function OrdersPage() {
   };
 
   const filteredOrders = orders.filter(order => {
-    const matchesSearch = order.id.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                         (order.customer_email && order.customer_email.toLowerCase().includes(searchTerm.toLowerCase()));
+    const matchesSearch = order.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (order.customer_email && order.customer_email.toLowerCase().includes(searchTerm.toLowerCase()));
     const matchesStatus = statusFilter === "All" || order.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
@@ -85,57 +86,92 @@ export default function OrdersPage() {
         <p className="text-[#4A1523]/60 font-light">Manage and track customer purchases</p>
       </header>
 
-      <div className="flex flex-col md:flex-row gap-4 mb-8 justify-between items-center">
+      <div className="flex flex-col md:flex-row gap-4 mb-8 justify-between items-center relative z-20">
+        {/* Search */}
         <div className="relative w-full md:max-w-[280px]">
           <Search className="absolute left-3.5 top-1/2 transform -translate-y-1/2 text-[#4A1523]/40 w-4 h-4" />
-          <input 
-            type="text" 
-            placeholder="Search orders..." 
+          <input
+            type="text"
+            placeholder="Search orders..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full pl-10 pr-4 py-2.5 bg-white border border-[#4A1523]/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#E9967A]/50 text-sm text-[#4A1523] shadow-sm transition-all"
           />
         </div>
 
-        <div className="flex items-center gap-1 bg-[#4A1523]/5 p-1 rounded-2xl border border-[#4A1523]/10 shadow-inner overflow-x-auto no-scrollbar max-w-full">
-          {["All", "Pending", "Processing", "Shipped", "Delivered", "Cancelled"].map(status => {
-            const count = status === "All" 
-              ? orders.length 
-              : orders.filter(o => o.status === status).length;
-            
-            return (
-              <button
-                key={status}
-                onClick={() => setStatusFilter(status)}
-                className={`relative px-4 py-2 rounded-xl text-[10px] font-bold tracking-widest transition-all duration-300 whitespace-nowrap flex items-center gap-1.5 ${
-                  statusFilter === status 
-                  ? 'bg-white text-[#4A1523] shadow-sm' 
-                  : 'text-[#4A1523]/40 hover:text-[#4A1523]/70'
-                }`}
-              >
-                {status.toUpperCase()}
-                <span className={`inline-flex items-center justify-center min-w-[1.25rem] h-4 px-1 rounded-full text-[9px] ${
-                  statusFilter === status 
-                  ? 'bg-[#4A1523] text-white' 
-                  : 'bg-[#4A1523]/10 text-[#4A1523]/60'
-                }`}>
-                  {count}
-                </span>
-              </button>
-            );
-          })}
+        {/* Status Dropdown Triggered by Icon */}
+        <div className="relative w-full md:w-auto flex justify-end">
+          <button
+            onClick={() => setFilterOpen(!filterOpen)}
+            className="flex items-center gap-2 px-5 py-2.5 bg-white border border-[#4A1523]/10 rounded-xl hover:border-[#E9967A]/50 text-[#4A1523]/80 hover:text-[#4A1523] text-sm font-medium shadow-sm transition-all duration-300 group"
+          >
+            <Filter className={`w-4 h-4 text-[#4A1523]/60 group-hover:text-[#E9967A] transition-colors ${filterOpen ? 'text-[#E9967A]' : ''}`} />
+            <span className="tracking-wide text-xs uppercase font-bold text-[#4A1523]/70">Status:</span>
+            <span className="font-semibold text-xs uppercase text-[#4A1523]">{statusFilter}</span>
+            <span className="inline-flex items-center justify-center min-w-[1.25rem] h-5 px-1.5 rounded-full bg-[#4A1523]/5 text-[#4A1523] text-[10px] font-bold">
+              {statusFilter === "All" ? orders.length : orders.filter(o => o.status === statusFilter).length}
+            </span>
+          </button>
+
+          {filterOpen && (
+            <>
+              {/* Overlay backdrop */}
+              <div 
+                className="fixed inset-0 z-10" 
+                onClick={() => setFilterOpen(false)}
+              />
+              
+              <div className="absolute right-0 mt-12 w-64 bg-white/95 backdrop-blur-md border border-[#4A1523]/10 rounded-2xl shadow-xl z-20 overflow-hidden transform origin-top-right transition-all duration-300">
+                <div className="p-3 border-b border-[#4A1523]/5 bg-[#4A1523]/5">
+                  <span className="text-[10px] uppercase font-bold tracking-widest text-[#4A1523]/40 px-1 block">Filter By Status</span>
+                </div>
+                <div className="p-1.5 space-y-0.5">
+                  {["All", "Pending", "Processing", "Shipped", "Delivered", "Cancelled"].map(status => {
+                    const count = status === "All" 
+                      ? orders.length 
+                      : orders.filter(o => o.status === status).length;
+                    const isActive = statusFilter === status;
+                    
+                    return (
+                      <button
+                        key={status}
+                        onClick={() => {
+                          setStatusFilter(status);
+                          setFilterOpen(false);
+                        }}
+                        className={`w-full text-left px-4 py-2.5 rounded-xl text-xs font-semibold tracking-wide transition-all flex items-center justify-between ${
+                          isActive 
+                          ? 'bg-[#4A1523] text-white' 
+                          : 'text-[#4A1523]/70 hover:bg-[#4A1523]/5 hover:text-[#4A1523]'
+                        }`}
+                      >
+                        <span className="flex items-center gap-2">
+                          <span className={`w-1.5 h-1.5 rounded-full ${
+                            isActive ? 'bg-[#E9967A]' : 
+                            status === 'Pending' ? 'bg-yellow-400' :
+                            status === 'Processing' ? 'bg-blue-400' :
+                            status === 'Shipped' ? 'bg-purple-400' :
+                            status === 'Delivered' ? 'bg-green-400' :
+                            status === 'Cancelled' ? 'bg-red-400' : 'bg-gray-400'
+                          }`} />
+                          {status}
+                        </span>
+                        <span className={`inline-flex items-center justify-center min-w-[1.25rem] h-5 px-1.5 rounded-full text-[9px] font-bold ${
+                          isActive 
+                          ? 'bg-white/20 text-white' 
+                          : 'bg-[#4A1523]/10 text-[#4A1523]/60'
+                        }`}>
+                          {count}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </>
+          )}
         </div>
       </div>
-
-      <style jsx>{`
-        .no-scrollbar::-webkit-scrollbar {
-          display: none;
-        }
-        .no-scrollbar {
-          -ms-overflow-style: none;
-          scrollbar-width: none;
-        }
-      `}</style>
 
       <div className="bg-white/60 backdrop-blur-md border border-white/50 rounded-2xl overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
         <div className="overflow-x-auto">
@@ -171,7 +207,7 @@ export default function OrdersPage() {
                       <div className="text-[10px] text-[#4A1523]/40 truncate max-w-[150px]">ID: {order.user_id}</div>
                     </td>
                     <td className="px-6 py-4 text-sm font-semibold text-[#4A1523]">
-                      ₹{order.total_amount?.toFixed(2)}
+                      ₹{(order.total_price ?? order.total_amount ?? 0).toFixed(2)}
                     </td>
                     <td className="px-6 py-4">
                       <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold border ${getStatusColor(order.status)}`}>
@@ -180,7 +216,7 @@ export default function OrdersPage() {
                       </span>
                     </td>
                     <td className="px-6 py-4 text-right">
-                      <Link 
+                      <Link
                         href={`/seller/orders/${order.id}`}
                         className="inline-flex items-center justify-center p-2 text-[#4A1523]/40 hover:text-[#E9967A] transition-colors"
                       >

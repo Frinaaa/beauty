@@ -5,7 +5,6 @@ import { useParams, useRouter } from "next/navigation";
 import { supabase } from "@/src/lib/supabase";
 import { 
   ArrowLeft, 
-  Package, 
   User, 
   MapPin, 
   CreditCard, 
@@ -15,7 +14,6 @@ import {
   AlertCircle,
   Truck
 } from "lucide-react";
-import Link from "next/link";
 
 type OrderItem = {
   id: string;
@@ -23,13 +21,15 @@ type OrderItem = {
   price: number;
   quantity: number;
   image_url?: string;
+  image?: string;
 };
 
 type Order = {
   id: string;
   created_at: string;
   user_id: string;
-  total_amount: number;
+  total_amount?: number;
+  total_price?: number;
   status: 'Pending' | 'Processing' | 'Shipped' | 'Delivered' | 'Cancelled';
   customer_email?: string;
   shipping_address?: any;
@@ -161,26 +161,29 @@ export default function OrderDetailsPage() {
             <div className="space-y-6">
               <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-[#4A1523]/40 border-b border-[#4A1523]/10 pb-2">Order Items</h3>
               <div className="space-y-4">
-                {order.items?.map((item, idx) => (
-                  <div key={idx} className="flex items-center justify-between py-2">
-                    <div className="flex items-center gap-4">
-                      <div className="w-16 h-16 bg-[#F8F7F4] rounded-xl overflow-hidden border border-[#4A1523]/5">
-                        {item.image_url && <img src={item.image_url} alt={item.name} className="w-full h-full object-cover" />}
+                {order.items?.map((item, idx) => {
+                  const itemImg = item.image || item.image_url || '';
+                  return (
+                    <div key={idx} className="flex items-center justify-between py-2">
+                      <div className="flex items-center gap-4">
+                        <div className="w-16 h-16 bg-[#F8F7F4] rounded-xl overflow-hidden border border-[#4A1523]/5">
+                          {itemImg && <img src={itemImg} alt={item.name} className="w-full h-full object-cover" />}
+                        </div>
+                        <div>
+                          <p className="font-medium text-[#4A1523]">{item.name}</p>
+                          <p className="text-xs text-[#4A1523]/40">Qty: {item.quantity}</p>
+                        </div>
                       </div>
-                      <div>
-                        <p className="font-medium text-[#4A1523]">{item.name}</p>
-                        <p className="text-xs text-[#4A1523]/40">Qty: {item.quantity}</p>
-                      </div>
+                      <p className="font-semibold text-[#4A1523]">₹{(item.price * item.quantity).toFixed(2)}</p>
                     </div>
-                    <p className="font-semibold text-[#4A1523]">₹{(item.price * item.quantity).toFixed(2)}</p>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
               
               <div className="pt-6 border-t border-[#4A1523]/10 space-y-2">
                 <div className="flex justify-between text-sm">
                   <span className="text-[#4A1523]/60">Subtotal</span>
-                  <span className="text-[#4A1523]">₹{order.total_amount?.toFixed(2)}</span>
+                  <span className="text-[#4A1523]">₹{(order.total_price ?? order.total_amount ?? 0).toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-[#4A1523]/60">Shipping</span>
@@ -188,7 +191,7 @@ export default function OrderDetailsPage() {
                 </div>
                 <div className="flex justify-between text-xl font-bold pt-4 border-t border-[#4A1523]/10 text-[#4A1523]">
                   <span>Total Amount</span>
-                  <span>₹{order.total_amount?.toFixed(2)}</span>
+                  <span>₹{(order.total_price ?? order.total_amount ?? 0).toFixed(2)}</span>
                 </div>
               </div>
             </div>
@@ -220,11 +223,26 @@ export default function OrderDetailsPage() {
             </h3>
             {order.shipping_address ? (
               <div className="text-sm text-[#4A1523] leading-relaxed">
-                <p className="font-medium">{order.shipping_address.fullName}</p>
-                <p>{order.shipping_address.street}</p>
-                <p>{order.shipping_address.city}, {order.shipping_address.zipCode}</p>
-                <p>{order.shipping_address.country}</p>
-                <p className="mt-2 text-xs text-[#4A1523]/60 font-medium">{order.shipping_address.phone}</p>
+                {order.shipping_address.fullName ? (
+                  <>
+                    <p className="font-medium">{order.shipping_address.fullName}</p>
+                    <p>{order.shipping_address.street}</p>
+                    <p>{order.shipping_address.city}, {order.shipping_address.zipCode}</p>
+                    <p>{order.shipping_address.country}</p>
+                    <p className="mt-2 text-xs text-[#4A1523]/60 font-medium">{order.shipping_address.phone}</p>
+                  </>
+                ) : (
+                  <>
+                    <p className="font-medium">Address:</p>
+                    <p className="mb-2">{order.shipping_address.address || "N/A"}</p>
+                    {order.shipping_address.location && (
+                      <>
+                        <p className="font-medium mt-3 text-xs uppercase tracking-wider text-[#4A1523]/40">Location Coordinates:</p>
+                        <p className="font-mono text-xs text-[#C83D3D] bg-red-50/50 p-2 rounded-lg border border-red-100/50 mt-1 truncate">{order.shipping_address.location}</p>
+                      </>
+                    )}
+                  </>
+                )}
               </div>
             ) : (
               <p className="text-sm text-[#4A1523]/40 italic">No shipping info provided</p>
