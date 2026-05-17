@@ -1,7 +1,7 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   let response = NextResponse.next({ request: { headers: request.headers } })
 
   try {
@@ -32,11 +32,10 @@ export async function middleware(request: NextRequest) {
   } catch (error) {
     // If Supabase is unreachable (network error), let the request through
     // rather than crashing the entire page render
-    console.error('Middleware auth check failed:', error)
+    console.error('Proxy auth check failed:', error)
   }
 
   return response
 }
 
 export const config = { matcher: ['/seller/:path*', '/'] }
-
