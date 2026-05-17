@@ -4,6 +4,11 @@ import { NextResponse, type NextRequest } from 'next/server'
 export async function proxy(request: NextRequest) {
   let response = NextResponse.next({ request: { headers: request.headers } })
 
+  // Bypass proxy redirects for Server Actions or non-GET requests to prevent fetchServerAction crashes
+  if (request.method !== 'GET' || request.headers.has('next-action') || request.headers.has('x-action')) {
+    return response;
+  }
+
   try {
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
