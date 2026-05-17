@@ -171,7 +171,7 @@ export default function OrdersPage() {
                       <div className="text-[10px] text-[#4A1523]/40 truncate max-w-[150px]">ID: {order.user_id}</div>
                     </td>
                     <td className="px-6 py-4 text-sm font-semibold text-[#4A1523]">
-                      ${order.total_amount?.toFixed(2)}
+                      ₹{order.total_amount?.toFixed(2)}
                     </td>
                     <td className="px-6 py-4">
                       <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold border ${getStatusColor(order.status)}`}>

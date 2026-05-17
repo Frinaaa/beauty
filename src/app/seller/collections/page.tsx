@@ -135,7 +135,7 @@ export default function CollectionsPage() {
                     <span className="text-[10px] font-bold tracking-widest uppercase text-[#E9967A] mb-1">{product.brand_name}</span>
                   )}
                   <h3 className="text-base font-medium text-[#4A1523] mb-1 text-center line-clamp-1 w-full">{product.name}</h3>
-                  <p className="text-sm text-[#4A1523]/60 mb-4">{product.category} • ${product.price}</p>
+                  <p className="text-sm text-[#4A1523]/60 mb-4">{product.category} • ₹{product.price}</p>
                   
                   <div className="flex gap-3 mt-auto w-full justify-center">
                     <Link 

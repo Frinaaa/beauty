@@ -1,4 +1,4 @@
-import { Package, Layers, Tag, DollarSign } from "lucide-react";
+import { Package, Layers, Tag, IndianRupee } from "lucide-react";
 
 export default function DashboardStats({
   inventoryCount,
@@ -30,8 +30,8 @@ export default function DashboardStats({
     },
     {
       title: "Revenue",
-      value: "$0.00", // Placeholder for future feature
-      icon: <DollarSign className="w-6 h-6 text-[#4A1523]" />,
+      value: "₹0.00", // Placeholder for future feature
+      icon: <IndianRupee className="w-6 h-6 text-[#4A1523]" />,
       bg: "bg-[#4A1523]/10",
     },
   ];

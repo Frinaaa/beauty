@@ -87,14 +87,15 @@ function ProductForm() {
   };
 
   const removeImage = (indexToRemove: number) => {
-    setPreviewUrls(prev => prev.filter((_, i) => i !== indexToRemove));
-    // Approximate removal from files array if it's a new upload. 
-    // We calculate the offset based on how many existing URLs there were.
-    const existingCount = previewUrls.length - files.length;
-    if (indexToRemove >= existingCount) {
-      const fileIndex = indexToRemove - existingCount;
-      setFiles(prev => prev.filter((_, i) => i !== fileIndex));
-    }
+    setPreviewUrls((prevPreview) => {
+      const updatedPreview = prevPreview.filter((_, i) => i !== indexToRemove);
+      const existingCount = prevPreview.length - files.length;
+      if (indexToRemove >= existingCount) {
+        const fileIndex = indexToRemove - existingCount;
+        setFiles((prevFiles) => prevFiles.filter((_, i) => i !== fileIndex));
+      }
+      return updatedPreview;
+    });
   };
 
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
@@ -348,7 +349,7 @@ function ProductForm() {
         <div className="space-y-6">
           <h3 className="text-lg font-semibold text-[#4A1523] border-b border-[#4A1523]/10 pb-2">6. Key Ingredients Detail</h3>
           {keyIngredients.map((ing, idx) => (
-            <div key={idx} className="grid grid-cols-[1fr_2fr_auto] gap-3 items-start">
+            <div key={idx} className="grid grid-cols-[1fr_fr_auto] gap-3 items-start">
               <input
                 value={ing.name}
                 onChange={(e) => {
@@ -503,15 +504,15 @@ function ProductForm() {
                 {liveData.discount && Number(liveData.discount) > 0 ? (
                   <>
                     <span className="text-[#4A1523] font-medium text-lg">
-                      ${(Number(liveData.price) * (1 - Number(liveData.discount) / 100)).toFixed(2)}
+                      ₹{(Number(liveData.price) * (1 - Number(liveData.discount) / 100)).toFixed(2)}
                     </span>
                     <span className="text-xs text-[#4A1523]/50 line-through">
-                      ${Number(liveData.price).toFixed(2)}
+                      ₹{Number(liveData.price).toFixed(2)}
                     </span>
                   </>
                 ) : (
                   <span className="text-[#4A1523] font-medium text-lg">
-                    ${liveData.price ? Number(liveData.price).toFixed(2) : "0.00"}
+                    ₹{liveData.price ? Number(liveData.price).toFixed(2) : "0.00"}
                   </span>
                 )}
               </div>
@@ -540,10 +541,53 @@ function ProductForm() {
                 {liveData.key_ingredients}
               </div>
             )}
-            
-            <div className="mt-2 pt-4 border-t border-[#4A1523]/10 flex justify-between text-xs text-[#4A1523]/50 font-medium">
+
+            {keyIngredients.some((ing) => ing.name.trim() || ing.description.trim()) && (
+              <div className="mb-4">
+                <div className="text-xs font-semibold uppercase tracking-[2px] text-[#4A1523]/50 mb-2">Ingredient Details</div>
+                <ul className="list-disc list-inside text-xs text-[#4A1523]/70 space-y-1">
+                  {keyIngredients.filter((ing) => ing.name.trim() || ing.description.trim()).map((ing, idx) => (
+                    <li key={idx}>
+                      <span className="font-semibold text-[#4A1523]">{ing.name || "Ingredient"}</span>
+                      {ing.description ? ` — ${ing.description}` : ""}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {liveData.full_ingredients && (
+              <div className="text-[11px] text-[#4A1523]/70 bg-[#F8F7F4] p-3 rounded-xl border border-[#4A1523]/10 mb-4">
+                <div className="font-semibold text-[#4A1523] mb-1">Full Ingredients</div>
+                <p className="whitespace-pre-line leading-relaxed">{liveData.full_ingredients}</p>
+              </div>
+            )}
+
+            {liveData.texture_feel && (
+              <div className="text-[11px] text-[#4A1523]/80 bg-[#FFF8F3] p-3 rounded-xl border border-[#E9967A]/20 mb-4">
+                <div className="font-semibold text-[#4A1523] mb-1">Texture & Feel</div>
+                <p className="leading-relaxed">{liveData.texture_feel}</p>
+              </div>
+            )}
+
+            {liveData.benefits && (
+              <div className="mb-4">
+                <div className="text-xs font-semibold uppercase tracking-[2px] text-[#4A1523]/50 mb-2">Benefits</div>
+                <ul className="list-disc list-inside text-xs text-[#4A1523]/70 space-y-1 whitespace-pre-line">
+                  {liveData.benefits.split(/\r?\n/).filter(Boolean).map((benefit: string, idx: number) => (
+                    <li key={idx}>{benefit}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            <div className="mt-2 pt-4 border-t border-[#4A1523]/10 flex flex-col gap-2 text-xs text-[#4A1523]/50 font-medium">
               <span>Stock: {liveData.stock || "0"} units</span>
-              <span>Ready to publish</span>
+              {liveData.discount ? (
+                <span>{liveData.discount}% discount applied</span>
+              ) : (
+                <span>No discount applied</span>
+              )}
             </div>
           </div>
         </div>

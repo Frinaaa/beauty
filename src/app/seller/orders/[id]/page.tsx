@@ -172,7 +172,7 @@ export default function OrderDetailsPage() {
                         <p className="text-xs text-[#4A1523]/40">Qty: {item.quantity}</p>
                       </div>
                     </div>
-                    <p className="font-semibold text-[#4A1523]">${(item.price * item.quantity).toFixed(2)}</p>
+                    <p className="font-semibold text-[#4A1523]">₹{(item.price * item.quantity).toFixed(2)}</p>
                   </div>
                 ))}
               </div>
@@ -180,7 +180,7 @@ export default function OrderDetailsPage() {
               <div className="pt-6 border-t border-[#4A1523]/10 space-y-2">
                 <div className="flex justify-between text-sm">
                   <span className="text-[#4A1523]/60">Subtotal</span>
-                  <span className="text-[#4A1523]">${order.total_amount?.toFixed(2)}</span>
+                  <span className="text-[#4A1523]">₹{order.total_amount?.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-[#4A1523]/60">Shipping</span>
@@ -188,7 +188,7 @@ export default function OrderDetailsPage() {
                 </div>
                 <div className="flex justify-between text-xl font-bold pt-4 border-t border-[#4A1523]/10 text-[#4A1523]">
                   <span>Total Amount</span>
-                  <span>${order.total_amount?.toFixed(2)}</span>
+                  <span>₹{order.total_amount?.toFixed(2)}</span>
                 </div>
               </div>
             </div>

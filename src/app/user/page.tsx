@@ -49,7 +49,7 @@ export default async function UserStorefront() {
               <div className="p-6">
                 <div className="flex justify-between items-start mb-2">
                   <h3 className="text-lg font-medium text-[#4A1523] truncate pr-4">{product.name}</h3>
-                  <span className="text-[#E9967A] font-medium">${Number(product.price).toFixed(2)}</span>
+                  <span className="text-[#E9967A] font-medium">₹{Number(product.price).toFixed(2)}</span>
                 </div>
                 <p className="text-sm text-[#4A1523]/60 line-clamp-2 mb-4 font-light leading-relaxed">
                   {product.description}
