@@ -74,7 +74,8 @@ export default function OrdersPage() {
 
   const filteredOrders = orders.filter(order => {
     const matchesSearch = order.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (order.customer_email && order.customer_email.toLowerCase().includes(searchTerm.toLowerCase()));
+      (order.customer_email && order.customer_email.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (order.items && order.items.some((item: any) => item.name?.toLowerCase().includes(searchTerm.toLowerCase())));
     const matchesStatus = statusFilter === "All" || order.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
@@ -180,7 +181,7 @@ export default function OrdersPage() {
               <tr className="bg-[#4A1523]/5 border-b border-[#4A1523]/10">
                 <th className="px-6 py-4 text-xs font-bold uppercase tracking-widest text-[#4A1523]/70">Order ID</th>
                 <th className="px-6 py-4 text-xs font-bold uppercase tracking-widest text-[#4A1523]/70">Date</th>
-                <th className="px-6 py-4 text-xs font-bold uppercase tracking-widest text-[#4A1523]/70">Customer</th>
+                <th className="px-6 py-4 text-xs font-bold uppercase tracking-widest text-[#4A1523]/70">Products</th>
                 <th className="px-6 py-4 text-xs font-bold uppercase tracking-widest text-[#4A1523]/70">Total</th>
                 <th className="px-6 py-4 text-xs font-bold uppercase tracking-widest text-[#4A1523]/70">Status</th>
                 <th className="px-6 py-4 text-xs font-bold uppercase tracking-widest text-[#4A1523]/70 text-right">Action</th>
@@ -203,8 +204,46 @@ export default function OrdersPage() {
                       {new Date(order.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
                     </td>
                     <td className="px-6 py-4">
-                      <div className="text-sm text-[#4A1523] font-medium">{order.customer_email || "N/A"}</div>
-                      <div className="text-[10px] text-[#4A1523]/40 truncate max-w-[150px]">ID: {order.user_id}</div>
+                      <div className="flex items-center gap-3">
+                        {order.items && order.items.length > 0 ? (
+                          <>
+                            <div className="flex -space-x-2.5 overflow-hidden flex-shrink-0">
+                              {order.items.slice(0, 3).map((item: any, idx: number) => {
+                                const itemImg = item.image || item.image_url || '';
+                                return (
+                                  <div key={idx} className="w-8 h-8 rounded-full border-2 border-white bg-[#F8F7F4] overflow-hidden flex-shrink-0 shadow-sm relative group/thumb">
+                                    {itemImg ? (
+                                      <img src={itemImg} alt={item.name} className="w-full h-full object-cover" />
+                                    ) : (
+                                      <div className="w-full h-full flex items-center justify-center text-[10px] text-[#4A1523]/40 font-bold bg-[#4A1523]/5">
+                                        {item.name?.slice(0, 1).toUpperCase() || 'P'}
+                                      </div>
+                                    )}
+                                  </div>
+                                );
+                              })}
+                              {order.items.length > 3 && (
+                                <div className="w-8 h-8 rounded-full border-2 border-white bg-[#4A1523]/5 flex items-center justify-center text-[9px] text-[#4A1523]/60 font-bold shadow-sm flex-shrink-0">
+                                  +{order.items.length - 3}
+                                </div>
+                              )}
+                            </div>
+                            <div className="flex flex-col min-w-0">
+                              <span className="text-sm font-semibold text-[#4A1523] truncate max-w-[180px]">
+                                {order.items[0]?.name || "Product"}
+                              </span>
+                              <span className="text-[10px] text-[#4A1523]/60 font-light">
+                                {order.items.length === 1 
+                                  ? `Qty: ${order.items[0]?.quantity || 1}`
+                                  : `${order.items.reduce((sum: number, item: any) => sum + (item.quantity || 0), 0)} items total`
+                                }
+                              </span>
+                            </div>
+                          </>
+                        ) : (
+                          <span className="text-sm text-[#4A1523]/40 italic">No products</span>
+                        )}
+                      </div>
                     </td>
                     <td className="px-6 py-4 text-sm font-semibold text-[#4A1523]">
                       ₹{(order.total_price ?? order.total_amount ?? 0).toFixed(2)}
